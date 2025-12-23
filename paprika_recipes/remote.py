@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from typing import Dict, Iterable, Iterator, List, Optional
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from .cache import Cache, NullCache
 from .exceptions import PaprikaError, RequestError
@@ -27,6 +29,7 @@ class Remote(RecipeManager):
     _email: str
     _password: str
     _user_agent: Optional[str]
+    _session: requests.Session
 
     def __init__(
         self,
@@ -35,6 +38,7 @@ class Remote(RecipeManager):
         domain: str = "www.paprikaapp.com",
         cache: Optional[Cache] = None,
         user_agent: Optional[str] = None,
+        timeout: int = 30,
     ):
         super().__init__()
         self._email = email
@@ -45,6 +49,17 @@ class Remote(RecipeManager):
         self._user_agent = user_agent if user_agent is not None else detect_user_agent()
         self._timeout = timeout
 
+        # Create session with retry strategy
+        self._session = requests.Session()
+        retry_strategy = Retry(
+            total=3,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["GET", "POST"],
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self._session.mount("https://", adapter)
+        self._session.mount("http://", adapter)
 
     def __iter__(self) -> Iterator[RemoteRecipe]:
         yield from self.recipes
