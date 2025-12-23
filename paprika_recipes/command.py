@@ -27,7 +27,7 @@ def get_installed_commands() -> Dict[str, Type[BaseCommand]]:
             loaded_class = entry_point.load()
         except ImportError:
             logger.warning(
-                "Attempted to load entrypoint %s, but " "an ImportError occurred.",
+                "Attempted to load entrypoint %s, but an ImportError occurred.",
                 entry_point,
             )
             continue

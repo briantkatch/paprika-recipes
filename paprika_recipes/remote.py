@@ -7,6 +7,7 @@ from .cache import Cache, NullCache
 from .exceptions import PaprikaError, RequestError
 from .recipe import BaseRecipe
 from .types import RecipeManager, RemoteRecipeIdentifier
+from .user_agent import detect_user_agent
 
 
 @dataclass
@@ -40,7 +41,10 @@ class Remote(RecipeManager):
         self._password = password
         self._domain = domain
         self._cache = cache if cache else NullCache()
-        self._user_agent = user_agent
+        # Auto-detect user agent if not provided
+        self._user_agent = user_agent if user_agent is not None else detect_user_agent()
+        self._timeout = timeout
+
 
     def __iter__(self) -> Iterator[RemoteRecipe]:
         yield from self.recipes
@@ -109,7 +113,12 @@ class Remote(RecipeManager):
         if self._user_agent:
             headers["User-Agent"] = self._user_agent
 
-        result = requests.request(method, f"https://{self._domain}{path}", **kwargs)
+        # Set default timeout if not provided
+        kwargs.setdefault("timeout", self._timeout)
+
+        result = self._session.request(
+            method, f"https://{self._domain}{path}", **kwargs
+        )
         result.raise_for_status()
 
         if "error" in result.json():
