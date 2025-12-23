@@ -24,12 +24,10 @@ class RecipeManager(metaclass=ABCMeta):
         yield from self.recipes
 
     @abstractproperty
-    def recipes(self) -> Iterable[BaseRecipe]:
-        ...
+    def recipes(self) -> Iterable[BaseRecipe]: ...
 
     @abstractmethod
-    def count(self) -> int:
-        ...
+    def count(self) -> int: ...
 
 
 class ConfigDict(TypedDict, total=False):
