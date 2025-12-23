@@ -1,4 +1,4 @@
-pyyaml>=5.0,<6.0
+pyyaml>=6.0,<7.0
 requests>=2.0,<3.0
 keyring>=21.0,<22.0
 rich>=12.3.0,<13.0
