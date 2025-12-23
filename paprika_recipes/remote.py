@@ -25,6 +25,7 @@ class Remote(RecipeManager):
     _domain: str
     _email: str
     _password: str
+    _user_agent: Optional[str]
 
     def __init__(
         self,
@@ -32,12 +33,14 @@ class Remote(RecipeManager):
         password: str,
         domain: str = "www.paprikaapp.com",
         cache: Optional[Cache] = None,
+        user_agent: Optional[str] = None,
     ):
         super().__init__()
         self._email = email
         self._password = password
         self._domain = domain
         self._cache = cache if cache else NullCache()
+        self._user_agent = user_agent
 
     def __iter__(self) -> Iterator[RemoteRecipe]:
         yield from self.recipes
@@ -97,10 +100,15 @@ class Remote(RecipeManager):
         ]
 
     def _request(self, method, path, authenticated=True, **kwargs):
+        # Set up headers
+        headers = kwargs.setdefault("headers", {})
+
         if authenticated:
-            kwargs.setdefault("headers", {})[
-                "Authorization"
-            ] = f"Bearer {self.bearer_token}"
+            headers["Authorization"] = f"Bearer {self.bearer_token}"
+
+        if self._user_agent:
+            headers["User-Agent"] = self._user_agent
+
         result = requests.request(method, f"https://{self._domain}{path}", **kwargs)
         result.raise_for_status()
 
