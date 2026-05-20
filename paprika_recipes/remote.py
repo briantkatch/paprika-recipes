@@ -137,7 +137,9 @@ class Remote(RecipeManager):
         result.raise_for_status()
 
         if "error" in result.json():
-            raise RequestError()
+            error = result.json()["error"]
+            msg = error.get("message", str(error)) if isinstance(error, dict) else str(error)
+            raise RequestError(msg)
 
         return result
 
